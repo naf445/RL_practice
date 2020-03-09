@@ -7,7 +7,7 @@ class policy_evaluator(object):
         
     Args:
         policy: [S, A] shaped matrix representing the policy to evaluate
-        env: OpenAI env. env.P represents the transition probabilities of the environment
+        env: OpenAI env
         k_loops: Number of iterations of synchronous Bellman Expectation Equation updates to the value function
         theta: Threshhold to stop evaluation once our value function change is less than for all states
         discount_factor: Gamma discount factor for future rewards
@@ -36,11 +36,22 @@ class policy_evaluator(object):
         iterations_complete = 0
         while iterations_complete < self.k_loops and np.max(delta_v_func) > self.theta:
             for state in range(self.nS): # Loop through all the states
+                new_value_function_output = 0
                 for action in range(self.nA):
-                        
-                state_dynamics = self.env_dynamic[state] # Grab state dynamics for current state
-                action = np.argmax(self.policy[state, 1:], axis=1).item() # Grab action dictated by current policy, using argmax to get back the index of whichever action has the highest probability deemed by the policy for this specific state
-                state_action_dynamic = state_dynamics[action]
+                    action_probability = self.policy[state, action]
+                    state_actions_dynamics = self.env_dynamics[state][action]
+                    for state_action_tuple in state_actions_dynamics: # Transition tuples (prob, next_state, reward, done)
+                        initial_reward = state_action_tuple[2]
+                        next_state_prob = state_action_tuple[0]
+                        next_state = state_action_tuple[1]
+                        state_contribution = initial_reward + self.discount_factor*(v_func_current[next_state]) 
+                        new_value_function_output += action_probability*next_state_prob*state_contribution
+                v_func_new[state] = new_value_function_output
+                delta_v_func = v_func_new - v_func_current
+                iterations_complete += 1
+        return v_func_new
 
 
-                
+
+
+
