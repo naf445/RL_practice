@@ -109,4 +109,8 @@ If you get the below table, you're doing well and you're on the right track!!
 pick one state to be how you update your value function or v_star, whether in policy evaluation or value iteration respectively, and not have to
 go through EVERY SINGLE state before announcing your new value func or v_star.
 - There are ways to make this choice of which state or states to update the value function at: In-place DP, Prioritized sweeping, Real-time DP
-
+- Eventually, for these methods, the curse of dimesionality is going to be so great
+we are going to need some way to get around the planning problem conditions
+where we have to know the fully specified MDP conditions and everything. In order to transition to
+the reinforcement learning problem, we are going to instantiate some more efficient sampling methods, 
+which are model free in nature, and don't require knowing the MDP model fully!
