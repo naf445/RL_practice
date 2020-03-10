@@ -1,3 +1,5 @@
 britz_RL/
 __pycache__/
 playground/
+*.swp
+*.png

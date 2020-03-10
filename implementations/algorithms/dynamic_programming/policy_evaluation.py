@@ -46,12 +46,8 @@ class policy_evaluator(object):
                         state_contribution = initial_reward + self.discount_factor*(v_func_current[next_state]) 
                         new_value_function_output += action_probability*next_state_prob*state_contribution
                 v_func_new[state] = new_value_function_output
-                delta_v_func = v_func_new - v_func_current
-                iterations_complete += 1
-            v_func_current = v_func_new
+            delta_v_func = v_func_new - v_func_current
+            iterations_complete += 1
+            v_func_current = v_func_new.copy()
         return v_func_new
-
-
-
-
 
