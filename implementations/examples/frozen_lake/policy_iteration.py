@@ -10,7 +10,9 @@ ENV_NAME = 'FrozenLake8x8-v0'
 
 def play_game_with_policies(env_name, list_of_policies, output_file_path):
     """FrozenLake-v0 is considered "solved" when the agent obtains an average
-    reward of at least 0.78 over 100 consecutive episodes."""
+    reward of at least 0.78 over 100 consecutive episodes.
+    This function takes an environment, and a list of policies
+    which it wants to compare performance between on this environment."""
     iteration_num = 0
     lake_env = gym.make(env_name)
     policy_average_rewards = []
@@ -43,16 +45,20 @@ def play_game_with_policies(env_name, list_of_policies, output_file_path):
 
 if __name__ == '__main__':
 
+    # Create your environment
     lake_env = gym.make(ENV_NAME)
     lake_env.reset()
 
+    # Create policy iterator object
     policy_iterator = pi.policy_iterator(env=lake_env.env,
                                         evaluation_loops=10000,
                                         theta=0.0001,
                                         discount_factor=1)
 
+    # Call iterate function and get all the policies iterated through
     list_of_policies = policy_iterator.iterate(iteration_loops=500)
 
+    # Play game with generated policies and save results!
     play_game_with_policies(env_name=ENV_NAME,
                             list_of_policies=list_of_policies,
                             output_file_path='outputs/policy_comparison.png')
