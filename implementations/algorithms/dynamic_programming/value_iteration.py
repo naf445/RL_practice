@@ -14,7 +14,7 @@ class value_iterator(object):
             discount_factor: Gamma discount factor for future rewards
 
         Returns:
-            [S, A] shaped matrix representing the optimal policy found  
+            List of [S, A] shaped matrices representing the optimal policies found along the way
     """
  
     def value_iterate(self, env, k_loops, theta, discount_factor):
