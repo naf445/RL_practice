@@ -16,8 +16,7 @@ class policy_evaluator(object):
         Vector of length env.nS representing the value function.
     """
 
-    def __init__(self, policy, env, k_loops, theta, discount_factor):
-        self.policy = policy
+    def __init__(self, env, k_loops, theta, discount_factor):
         self.env_dynamics = env.P # List of transition tuples (prob, next_state, reward, done)
         self.nS = env.nS # Number of states in the environment 
         self.nA = env.nA #  Number of actions in the environment
@@ -25,7 +24,7 @@ class policy_evaluator(object):
         self.theta = theta
         self.discount_factor = discount_factor
         
-    def evaluate(self):
+    def evaluate(self, policy):
         """
         Main loop of policy evaluation. Seeds an initial arbitrary value function, and then iteratively
         performs synchronous Bellman Expectation Equation updates until stopping condition is met.
@@ -38,7 +37,7 @@ class policy_evaluator(object):
             for state in range(self.nS): # Loop through all the states
                 new_value_function_output = 0
                 for action in range(self.nA):
-                    action_probability = self.policy[state, action]
+                    action_probability = policy[state, action]
                     state_actions_dynamics = self.env_dynamics[state][action]
                     for state_action_tuple in state_actions_dynamics: # Transition tuples (prob, next_state, reward, done)
                         initial_reward = state_action_tuple[2]
@@ -49,6 +48,7 @@ class policy_evaluator(object):
                 v_func_new[state] = new_value_function_output
                 delta_v_func = v_func_new - v_func_current
                 iterations_complete += 1
+            v_func_current = v_func_new
         return v_func_new
 
 
