@@ -35,7 +35,7 @@ class policy_iterator(object):
         Main loop of policy iteration. Seeds an initial arbitrary policy.
         Then performs policy evaluation on this policy. Then greedily picks a new policy
         based on this updated value function. And policy evaluates this.
-        "And so on to infinity" - Lupe Fiasco
+        "And so on to viscosity" - Lupe Fiasco
         """
         current_policy = np.zeros([self.nS, self.nA])  
         current_policy.fill(1/self.nA) # Begin with arbitrary random policy
