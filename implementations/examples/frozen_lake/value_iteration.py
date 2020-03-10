@@ -1,6 +1,6 @@
 import sys
 sys.path.append('../../') 
-import algorithms.dynamic_programming.policy_iteration as pi 
+import algorithms.dynamic_programming.value_iteration as vi 
 import gym
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,6 +13,7 @@ def play_game_with_policies(env_name, list_of_policies, output_file_path):
     reward of at least 0.78 over 100 consecutive episodes.
     This function takes an environment, and a list of policies
     which it wants to compare performance between on this environment."""
+    list_of_policies = list_of_policies[:3]+list_of_policies[-3:]
     iteration_num = 0
     lake_env = gym.make(env_name)
     policy_average_rewards = []
@@ -49,16 +50,16 @@ if __name__ == '__main__':
     lake_env = gym.make(ENV_NAME)
     lake_env.reset()
 
-    # Create policy iterator object
-    policy_iterator = pi.policy_iterator(env=lake_env.env,
-                                        evaluation_loops=10000,
-                                        theta=0.0001,
-                                        discount_factor=1)
+    # Create value iterator object
+    value_iterator = vi.value_iterator()
 
     # Call iterate function and get all the policies iterated through
-    list_of_policies = policy_iterator.iterate(iteration_loops=500)
+    list_of_policies = value_iterator.value_iterate(env=lake_env.env,
+                                               k_loops=1000,
+                                               theta=0.0001,
+                                               discount_factor=1)
 
     # Play game with generated policies and save results!
     play_game_with_policies(env_name=ENV_NAME,
                             list_of_policies=list_of_policies,
-                            output_file_path='outputs/policy_iter_policy_comparison.png')
+                            output_file_path='outputs/value_iter_policy_comparison.png')

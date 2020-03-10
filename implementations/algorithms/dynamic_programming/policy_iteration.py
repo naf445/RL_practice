@@ -15,7 +15,8 @@ class policy_iterator(object):
         discount_factor: Gamma discount factor for future rewards
                                                                                      
      Returns:
-        [S, A] shaped matrix representing the optimal policy found 
+        List of [S, A] shaped matrices representing the policies found
+            along the way to the final optimal policy found
     """
 
     def __init__(self, env, evaluation_loops, theta, discount_factor):
@@ -61,7 +62,7 @@ class policy_iterator(object):
             for action in range(self.nA):
                 action_value = 0
                 state_actions_dynamics = self.env_dynamics[state][action]
-                for state_action_tuple in state_actions_dynamics:
+                for state_action_tuple in state_actions_dynamics: # One of these for every possible state we could end up in
                     initial_reward = state_action_tuple[2]
                     next_state_prob = state_action_tuple[0]
                     next_state = state_action_tuple[1]

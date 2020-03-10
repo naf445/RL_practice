@@ -41,7 +41,8 @@ class policy_evaluator(object):
                 # This process allows us to do 2 weighted sums, both specified by the Bellman Expectation Equations.
                     action_probability = policy[state, action]
                     state_actions_dynamics = self.env_dynamics[state][action] # Grabbing info about possible repercussions from our action
-                    for state_action_tuple in state_actions_dynamics: # Transition tuples (prob, next_state, reward, done)
+                    for state_action_tuple in state_actions_dynamics: # Transition tuples (prob, next_state, reward, done),
+                        # Going through every possible state we could end up in!
                         initial_reward = state_action_tuple[2]
                         next_state_prob = state_action_tuple[0]
                         next_state = state_action_tuple[1]
