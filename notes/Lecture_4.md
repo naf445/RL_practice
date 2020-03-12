@@ -130,6 +130,21 @@ DP doesn't do sampling. Does full exhaustive search before making an update.
 do differently is the backup depth. MC does full backups while TD uses bootstrapping after seeing the imediate reward.
 - There is actually a middle ground! --> TD(lambda)
 - Essentially, we let the TD target look n_steps in to the future before we use our value function estimate!
-
+- See Opex handbook for maths.
+- But what n do we choose? We want to consider all of our N's and see what works best because sometimes it seems like
+n=0 or n=1000 or something in between is best
+- We can actually make a target which averages multiple different n-step answers for the value function.
+- Our estimate of the return could be like 0.333 x V(n_steps=5) + 0.333 x V(n_steps=2) + 0.333 x V(n_steps=10000)
+- So prior to this, we've been seeing TD(n_steps), but now with this averaging thing when implemented is called TD(lambda)
+- And things aren't just weighted equally though. All the N_s aren't. They are weighted by a term which is a function of lambda. Given in Opex Handbook notes!
+- This lambda however though if you think about it, we have to wait until an episode is done, because we need like v(n_50) and v(n_1000) and stuff.
+This suffers from some of the same issues as MC, because it has to wait the whole time for an entire episode! It does bootstrap, but it uses all the N_s, so some of them bootstrap some of them dont...
+- But, that is the forward TD(lambda), but now let's check backwards TD(lambda), where we still have the nice properties of TD learning, where it's
+incremental, and we don't have to wait for an entire episode and we can get
+some of the benefits of bootstrapping.
+The key here is actually modifying our learning rate, and making it so that the TD error is just normal TD(1) error, it doesn't do all the TD(n_step) errors and average them by lambda weighting anymore.
+The lambda does show up in the eligibility trace, which depends on 2 things: the frequency with which we visited the state, and the recency, and lambda!
+- Eligibility trace: the eligibility trace is a function of the recency and frequency of something, in our case, of encountering a state.  
+Every state get's an eligibility trace, and this affects the learning rate for this state's value function update. 
 
 
