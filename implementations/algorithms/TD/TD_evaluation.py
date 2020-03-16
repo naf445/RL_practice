@@ -1,6 +1,6 @@
 import numpy as np
 
-class TD_predictor(object):
+class TD_lambda_backwards_eval(object):
     """
     Backward looking TD lambda prediction/evaluation algorithm.
     Calculates the value function for a given policy.
@@ -36,6 +36,7 @@ class TD_predictor(object):
         performs v(s) updates until stopping condition is met.
         """
         eligibility_function = np.zeros(self.nS) # Initial, 0 for eligibility for update for all states.
+        # On each step, decay all state's eligibilities by γλ and increment the eligibility trace for the current state by 1
         v_func_current = np.zeros(self.nS) # Initial, arbitrary value_function for every state
         v_func_new = np.zeros(self.nS)
         delta_v_funcs = 1
@@ -43,17 +44,19 @@ class TD_predictor(object):
         while episodes_sampled < self.num_episodes and np.abs(np.max(delta_v_funcs)) > self.theta: # Loop breaks if either condition is violated
             state = self.env.reset()
             done = False
+            states_visited = []
             while not done:
+                states_visited.append(state)
                 action = self.policy_function(state)
                 next_state, reward, done, info = self.env.step(action)
                 td_error = reward + self.lambda_value*v_func_new[next_state] - v_func_new[state] # Get TD_error term, indicates the step direction for us to update our value function estimate by
-                # On each step, decay all state's eligibilities by γλ and increment the eligibility trace for the current state by 1
                 eligibility_function[state] = eligibility_function[state]+1
-                # Update value function at all states using current value function and TD lambda formula which should mostly just adjust high eligibility states
-                v_func_new =  [v_func_new[individ_state] + self.alpha*eligibility_function[individ_state]*td_error for individ_state in range(self.nS)]
-                eligibility_function = [e_state*self.lambda_value*self.gamma for e_state in eligibility_function]
+                # Update value function at all states using current best estimate of value function and TD lambda formula which should mostly just adjust high eligibility states
+                for state_visited in set(states_visited): # Only loop through previously visited states... backwards!
+                    v_func_new[state_visited] =  v_func_new[state_visited] + self.alpha*eligibility_function[state_visited]*td_error
+                    eligibility_function[state_visited] = eligibility_function[state_visited]*self.lambda_value*self.discount_factor
                 state = next_state
             delta_v_funcs = v_func_new - v_func_current
             v_func_current = v_func_new.copy()
             episodes_sampled += 1
-
+        return v_func_new

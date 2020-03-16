@@ -8,14 +8,12 @@ class MC_evaluator(object):
     Args:
         policy_function: A function that takes as inputs an agent's observation of environmental state and maps it to an action-probability tuple.
         env: OpenAI gym structured environment
-        learning_rate: aka alpha; Controls the size of our value function update after error direction has been determined
         num_episodes: Number of episodes to sample before stopping value function updating
         theta: Threshhold to stop value updating once our value function change is less than theta for all states
         discount_factor: Gamma/temporal discount factor
 
     Returns:
-        A dictionary that maps from state -> value.
-        The state is a tuple and the value is a float.
+        A list with index corresponding to state and value corresponding to V(s)
     """
 
     def __init__(self, policy_function, env, learning_rate, num_episodes, theta, discount_factor):
@@ -23,14 +21,13 @@ class MC_evaluator(object):
         self.env = env
         self.nS = env.env.nS # Number of states in the environment 
         self.nA = env.env.nA #  Number of actions in the environment
-        self.learning_rate = learning_rate
         self.num_episodes = num_episodes
         self.theta = theta
         self.discount_factor = discount_factor
 
     def evaluate(self):
         """
-        Main loop of the policy evaluation performed via MC method.
+        Main loop of the policy evaluation performed via every visit MC method.
         Seeds an initial arbitrary value function, and then iteratively
         performs synchronous v(s) updates after every episode until stopping condition is met.
         """
@@ -53,14 +50,14 @@ class MC_evaluator(object):
                 episode_actions.append(action)
                 state, reward, done, info = env.step(next_action)
                 episode_rewards.append(reward)
-            for episode_states_index in range(len(episode_states)): # Loop through every state we found ourselves in
+            for episode_states_index in range(len(episode_states)): # Loop through indexes of list of every state we found ourselves in
                 current_state = episode_states[episode_states_index] # Get actual state value, we will want to append our R in this V(state) 
                 R_from_state_visit = episode_rewards[index:] # Get a list of immediate reward until end of trajectory for every state visit
                 for R_index in range(len(R_from_state_visit)): # Go through this list of rewards and apply discount factor in to the future
-                    R_from_state_visit[R_index] = R_from_state_visit[R_index]*(self.discount_factor^R_index) 
-                v_func_new[current_state].append(np.sum(R_from_state_visit)) # For every state we found ourselves in, append the R from that visit to the value function list
-            v_func_new = [np.ave(reward_list) for reward_list in v_func_new] # Update value function by 
-            delta_v_funcs = v_func_new - v_func_current
-            v_func_current = v_func_new
+                    R_from_state_visit[R_index] = R_from_state_visit[R_index]*(self.discount_factor^R_index) # Apply future discounting before summing the R for a state visited
+                v_func_new_raw_values[current_state].append(np.sum(R_from_state_visit)) # For every state we found ourselves in, append the R (including future discounting) from that visit to the value function list
+            v_func_new_average = [np.ave(reward_list) for reward_list in v_func_new_raw_values] # Update value function by averaging all reward streams found from a given state visit
+            delta_v_funcs = v_func_new_average - v_func_current_average
+            v_func_current_average = v_func_new_average.copy()
             episodes_samples += 1
-
+        return value_func_new_average
