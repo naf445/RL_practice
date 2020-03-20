@@ -60,6 +60,8 @@ class MC_online_Q_evaluator(object):
                 episode_states.append(state)
                 episode_actions.append(action)
                 state, reward, done, info = self.env.step(action)
+                if reward < 1 and done == True:
+                    reward = -1
                 episode_rewards.append(reward)
             for time_step in range(len(episode_states)): # Loop through every time step's actions/states/rewards and calculate G's
                 # Get actual state & actions we will want update in this Q(s,a) 

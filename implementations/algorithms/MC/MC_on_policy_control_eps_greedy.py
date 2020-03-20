@@ -4,6 +4,7 @@ import numpy as np
 from collections import defaultdict
 import numpy as np
 import random
+from copy import deepcopy
 import algorithms.MC.MC_evaluation_online_Q as MCeval
 
 class MC_on_policy(object):
@@ -30,7 +31,7 @@ class MC_on_policy(object):
                                                             discount_factor=discount_factor)
         self.nA = env.action_space.n
 
-    def iterate(self, iteration_loops):
+    def iterate(self, iteration_loops, print_every_n):
         """
         Main loop of this policy iteration.
         Performs policy evaluation to update an action-value function.
@@ -41,18 +42,17 @@ class MC_on_policy(object):
         current_policy_function = lambda state_input: random.randint(0,self.nA-1) # Initialize with random policy
         current_Q = None
         iterations_completed = 0
-        list_of_policy_functs = [] # Maintain policies throughout for comparison later
-        list_of_Q_dicts = []
+        list_of_Q_dicts = [] # Maintain Qs throughout for comparison later
         while iterations_completed < iteration_loops:
             current_Q = self.policy_evaluator.evaluate(policy_function=current_policy_function, existing_Q=current_Q) # Use policy evaluator to update action-value function
             current_policy_function = self.epsilon_greedily_update_policy(current_Q=current_Q,
                                                              iterations_completed=iterations_completed) # Use new Q function to epsilon greedily get new policy
-            if iterations_completed % 50000 == 0:
+            if iterations_completed % print_every_n == 0:
                 print("Completed {} full policy iterations and saved most recent policy".format(iterations_completed))
-                list_of_policy_functs.append(current_policy_function)
-                list_of_Q_dicts.append(current_Q)
+                print(current_Q)
+                list_of_Q_dicts.append(deepcopy(current_Q))
             iterations_completed += 1
-        return list_of_policy_functs, list_of_Q_dicts
+        return list_of_Q_dicts
 
     def epsilon_greedily_update_policy(self, current_Q, iterations_completed):
         """
@@ -62,7 +62,9 @@ class MC_on_policy(object):
         Epsilon = 1/iteration_number
         """
         iteration = iterations_completed+1
-        epsilon = min(1/np.log(iterations_completed+.0001),1)
+        # epsilon = min(1/np.log(iterations_completed+.0001),1)
+        # epsilon = 1/iteration
+        epsilon = 0.1
         def new_policy(state):
             heads = True if random.random() < epsilon else False # Flip our epsilon greedy coin
             if heads: # If heads comes up, choose random action

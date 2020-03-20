@@ -8,8 +8,7 @@ from statistics import mean
 import pandas as pd
 import seaborn as sns
 
-ENV_NAME = 'Blackjack-v0'
-# ENV_NAME = 'FrozenLake8x8-v0'
+ENV_NAME = 'FrozenLake-v0'
 
 def play_game_with_policies(env_name, list_of_Qs, output_file_path):
     """This function takes an environment, and a list of policies
@@ -40,25 +39,6 @@ def play_game_with_policies(env_name, list_of_Qs, output_file_path):
         plt.text(bar.get_x(), yval + .005, yval)
     plt.savefig(fname=output_file_path)
 
-def plot_Q_func(Q_func, output_path):
-    player_hands = [key[0] for key in Q_func.keys()]
-    dealer_hands = [key[1] for key in Q_func.keys()]
-    usable_ace = [key[2] for key in Q_func.keys()]
-    choices = [np.argmax(value['Q(s,a)']) for value in Q_func.values()]
-    Q_func_df = pd.DataFrame(data={'player':player_hands,'dealer':dealer_hands,'ace':usable_ace,'choices':choices})
-    ace_df = Q_func_df[Q_func_df.ace==True] 
-    no_ace_df = Q_func_df[Q_func_df.ace==False]
-    ace_df = ace_df.pivot(index='player', columns='dealer', values='choices')
-    no_ace_df = no_ace_df.pivot(index='player', columns='dealer', values='choices')
-    ace_heatmap = sns.heatmap(data=ace_df, annot=True)
-    ace_fig = ace_heatmap.get_figure()
-    ace_fig.savefig(output_path+'_ace.png')
-    no_ace_heatmap = sns.heatmap(data=no_ace_df, annot=True)
-    no_ace_fig = no_ace_heatmap.get_figure()
-    no_ace_fig.savefig(output_path+'_no_ace.png')
-    # print(Q_func_df)
-
-
 if __name__ == '__main__':
 
     # Create your environment
@@ -71,13 +51,13 @@ if __name__ == '__main__':
                                           discount_factor=1)
 
     # Call iterate function and get all the policies iterated through
-    list_of_Qs = policy_iterator.iterate(iteration_loops=5000001,
-                                        print_every_n=500000)
+    list_of_Qs = policy_iterator.iterate(iteration_loops=1000001,
+                                                           print_every_n=100000)
+    print('''Check these Qs to make sure they are sufficiently different!
+{}'''.format(list_of_Qs))
 
     # Play game with generated policies and save results!
     play_game_with_policies(env_name=ENV_NAME,
                             list_of_Qs=list_of_Qs,
                             output_file_path='outputs/policy_iter_GLIE_MC.png')
 
-    final_Q = list_of_Qs[-1]
-    plot_Q_func(Q_func=final_Q, output_path='outputs/optimal_policy_GLIE_MC')
