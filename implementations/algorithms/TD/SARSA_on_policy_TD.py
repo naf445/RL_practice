@@ -5,7 +5,7 @@ from collections import defaultdict
 import numpy as np
 import random
 from copy import deepcopy
-import algorithms.TD.TD_lambda_backwards_evaluation_Q as TDeval
+import algorithms.TD.TD_lambda_backwards_eval_SARSA as TDeval
 
 class TD_on_policy(object):
     """
@@ -28,7 +28,7 @@ class TD_on_policy(object):
 
     def __init__(self, env, discount_factor, learning_rate, lambda_value):
         # Create your policy evaluator you will use in prediction steps
-        self.policy_evaluator = TDeval.TD_lambda_backwards_eval_Q(env=env,
+        self.policy_evaluator = TDeval.TD_lambda_backwards_eval_SARSA(env=env,
                                                     learning_rate=learning_rate,
                                                     lambda_value=lambda_value,
                                                     discount_factor=discount_factor)
