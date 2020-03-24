@@ -5,7 +5,6 @@ class TD_lambda_backwards_eval(object):
     """
     Backward looking TD lambda prediction/evaluation algorithm.
     Calculates the value function for a given policy.
-
     Args:
         policy_function: A function that takes as inputs an agent's observation of environmental state and maps it to an action-probability tuple.
         env: OpenAI gym structured environment
@@ -13,7 +12,6 @@ class TD_lambda_backwards_eval(object):
         lambda_value: Plays a role in eligibility function which determines structure of value function update algorithm
         num_episodes: Number of episodes to sample before stopping value function updating
         discount_factor: Gamma discount factor
-
     Returns:
         A dictionary that maps from state -> value.
         The state is a tuple and the value is a float.
@@ -56,13 +54,3 @@ class TD_lambda_backwards_eval(object):
             if episodes_sampled % 50000 == 0:
                 print('Finished episode: {}'.format(episodes_sampled))
         return v_func_new
-
-
-
-
-
-
-
-
-
-
