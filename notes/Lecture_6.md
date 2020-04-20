@@ -1,6 +1,6 @@
 # RL Course by David Silver, Lecture 6
 ## Notes by Nathan Franklin
-## March-2020
+## March-April-2020
 
 - Wheeew we are finally back to taking some notes.
 You have been on a hiatus implementing a lot of the algorithms Silver taught
@@ -21,8 +21,8 @@ Anyways, let's see what Silver has to say!
 1) Incremental: With every state-action-reward combo we see we use that information
 to update our value function approximation in this on-line manner.
 2) Batch: Can use entire history, less online
-This online/offline split isn't new, we've seen this before, but it can sometimes be confused
-with the on-policy/off-policy distinction we have between something like SARSA/Q_learning.
+This on**line**/offline split isn't new, we've seen this before, but it can sometimes be confused
+with the on-**policy**/off-policy distinction we have between something like SARSA/Q_learning.
 On/Off-line refers to how often you update your Value/Q Function, on/off policy refers to whether behavior/target policies are the same!
 - OK, why do we need value function approximation anyways?
 Well think of backgammon, even, there are 10^20 states. Are you going to have a value for each and every one of these states??? Or game of Go... 10^170 states.
@@ -36,16 +36,20 @@ This is a lookup table, and we update just only one specific s or (s,a) at a tim
 Too many actions to store!
 So slow if we only learn about one state/state_action at a time! Even with something like backwards TD which can allow us to update multiple, but still, takes too long.
 - Solution: Turn this thing into an **actual** Value/Q FUNCTION, and not just a lookup table!
-Our V(s) which only depended on the state and we could look it up, is now actually going to be a V(s, **w**), where **w** are the weights of our model!
+Pick some loss metric for it and minimize your loss metric by tweaking parameters to "tune" it!
+Our tabular V(s)s which only depended on the state and we look-up tables, now actually are going to be a full function with parameters, V(s, **w**), where **w** are the weights parameters/weights of this function we need to tune!
 Same with Q, q(s,a) --> q(s, a, **w**).
 Given a state and action, we can use our model to map from these to our Q or V output!
-This allows us to (as long as our model isn't HUGE) fit our value function in memory now! And also to generalize much better between nearby states and how
+This allows us to (as long as our model isn't HUGE and has less parameters than total states) let our value functions be smaller than the lookup table versions
+We can ideally encode the same amount of information now with less space, because we can take advantage of the relationships
+between the parameters and how they add together to make our value estimation, we won't need a look up table!
+Hopefully our value function even for a large state space can fit in memory now! And also to generalize much better between nearby states and how
 nearby states effect other's value mappings!
-We are going to update the model, our model weights, using either TD methods or MC methods.
-An MC method would take a whole episode, and cycle through the states using the G, while a TD method would bootstrap using itself and update the function every step.
+We are still going to update the model/function, by tweaking our model weights/parameters, using either TD methods or MC methods so nothing much there has changed.
+See past lectures for extensive breakdowns between these two aproaches!
 - See Opex Daily 3-25-20 For some visuals
-- The goal is again to approximate the TRUE value function or Q function, but we don't know the TRUE, so we use these models to get an estimate! Try and map tthis relationship.
-- Which model? Which function approximater? 
+- The goal is again to approximate the TRUE value function or Q function, with these estimation methods
+- What model should we user? What type of function and weights for this approximater? 
 Let's dig in to our machine learning toolkit:
 Linear/logistic regression? Neural Nets? Decision Tree? Ensemble Trees? KNN?
 Lots of choices!!
@@ -55,7 +59,32 @@ These have gradients we can find, meaning how our output changes with respect to
 "The gradients with respect to each parameter are thus considered to be the contribution of the parameter to the error" - Random online blog I found
 
 ### Incremental Methods
-- Using gradient descent, stochastic gradient descent because we update every step, with every new sample!
-- See Opex Daily for math review and info on gradient descent and how we employ it!
- 
+- Using gradient descent, and we update every step, with every new sample!
+- See Opex Daily (4-16, originally you had it on 4-8 page but 4-16 is a much better version)
+for math review and info on gradient descent and how we employ it!
+- Also see Opex Daily (4-8-20) for review of some ways to think of feature vectors
+- In a sense, the table lookup methods we learned prior are actually a special case of value function approximation!
+It's just that the feature vector is a binary yes or no for EVERY SINGLE state we could find ourselves in!
+This results in a feature vector as large as the state space!
+And this "feature" is now just a binary indicator, are we in this state or not.
+And if we think of our update rule now, we see that the feature value will be 1 while the others will all be 0, and thus only that weight will be updated!
+- OK, look at this word incremental, doesn't that sound familiar to you?
+YES, you've been dealing with incremental calculations this entire RL journey. We looked
+at ways to calculate the mean incrementally, we use an incremental update for all our methods (SARSA, Q-learning, etc...) we've learned so far!
+The commonalities to all of these methods are that instead of waiting to collect a bunch of information
+about our target measurement, we update our estimate with every new piece of information.
+We always have a base estimate, and then get some new estimate which we see how far away it is from that base estimate (and that gives us the direction)
+of our error, and then we correct our base estimate in that direction by some alpha learning rate!
+In these new function approximation methods, we are doing the same thing, but we are making it so every update is applied to ALL of the weights, in proportion to how active that feature was during the estimation.
+All the weights will get updated by the same error, and same learning rate, but they will differ in their gradients, and that's where we update the weights individually!
+- OK, but where are we going to get this "true" value of a state, so we can compare it to our base estimate and find the direction of our error for our
+incremental update?
+Well, the same way we've been doing it, using actual episodic experiences in either a monte carlo or TD fashion!
+- See Opex Daily 4-16 for a couple good equations!
+- See Opex Daily 4-20 for some notes on Value Function Approx
+- See Opex Daily 4-20 for Control step w/ Value Function Approx
+
+
+
+
 
