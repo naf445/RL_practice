@@ -83,8 +83,47 @@ Well, the same way we've been doing it, using actual episodic experiences in eit
 - See Opex Daily 4-16 for a couple good equations!
 - See Opex Daily 4-20 for some notes on Value Function Approx
 - See Opex Daily 4-20 for Control step w/ Value Function Approx
-
-
-
-
-
+- The choice between MC methods, TD(0), TD(lambda), and the on-policy/off-policy versions are not trivial, this is for prediction/evaluation.
+Sometimes they are good choices and sometimes they are not.
+If you are using Table Lookup function approximation, they are all fine.
+Linear function approximation, is fine for all on policy, but not for TD methods off-policy
+Non-linear function approximation is not fine for TD methods. 
+Of course this is all in theory and provable convergence, in practice sometimes these methods work fine!
+- For control step, we find that we have no way to know for sure that our greedy policy improvement actually improves our policy in a fundamental way.
+Our epsilon greedy step can be good, good, then bad, then good, then bad; we chatter around the optimal value policy and may never converge on it
+ 
+### Batch Methods!
+- So far we've talked about incremental gradient descent methods of weight updating, 
+our updates just have us tweaking our weights a bit in the downhill direction.
+But this is *not* sample efficient, we throw away every sample after we've used it and gotten out parameter gradient info out of it!
+- Batch methods tries to make this process more efficient and make more use of all of our training points!
+- One method would be to do a least squares method on all of our "training" data. 
+Meaning all of our collections of states/actions/rewards.
+- This is a different philosophy than the online gradient descent approach!
+- There is an easy way to find this least squares batch solution --> Experience Replay
+- Experience Replay
+We collect all of our "training data", store it as we move through our trajectory.
+Randomly sample from that data set, update using gradient descent!
+This is different than the incremental approach which updated using every *newest* point, not a random sample from our past points.
+Eventually, this gets us to the least squares solution actually. 
+- Experience Replay Used in Deep Q-Networks (DQN)
+This method combines 2 things we've seen before. 
+1) Experience Replay: A batch method where we collect all our (state, value) pairs and cache them as training data to be sample from
+2) Q-learning: Off-policy (trajectory generating policy is different from macro policy) policy iteration, where our target is given by the immediate reward plus the bootstrapped estimate of the State/Action we would choose given our policy.
+Step 1) Take an action according to epsilon greedy 
+Step 2) Store the SARS' in a replay memory D
+Step 3) Randomly sample some minibatch from our replay memory D
+Step 4) Compute our "labels" for all points in D, these labels are the Q-learning targets, the immediate reward plus the bootstrapped reward we would get with the S' from our policy
+Step 5) Perform gradient descent to update parameters using these points and using MSE as the loss function
+Another thing in DQN is that the targets we take as our "true" value, which we need to bootstrap, come from a value function which doesn't update every time, it is frozen for a bit!
+They use a convolutional neural network to go from image --> parameters --> Q value
+- Linear Least Squares Prediction (an alternative to sampling Experience Replay)
+Using this experience replay, random sampling from our cache of SARS' amd using gradient descent,
+it does find us this least squares solution eventually, but it may take a while!
+But think back to econometrics or ML 101 and linear regressions, we could just closed form solution this with our batch of cashed data points! 
+A little bit of linear algebra gets lets us skip to the correct solution!
+With a small number of features, this is a reasonable approach to take!
+Of course, we can heave Least Squares MC, TD-0, TD-L
+- This approach manifests in Least Squares Policy Iteration
+Evaluate by least squares Q-learning, improvement greedy
+- Buckle up you have some fun coding ahead of you! Don't forget to deep copy!
