@@ -8,19 +8,18 @@ class linear_function_approximator(object):
     as perform optimization of parameters via gradient descent.
     """
     
-    def __init__(self, num_actions, num_features, learning_rate):
+    def __init__(self, num_actions, num_features):
         self.num_features = num_features
         self.num_actions = num_actions 
-        self.weights = np.random.rand(self.num_features, self.num_actions)
-        self.learning_rate = learning_rate
+        self.weights = np.random.rand(self.num_actions, self.num_features) # Because this model will predict the action values for ALL actions every time, we will need a parameter for every feature for every possible action!
     
-    def predict(self, features, action):
+    def predict(self, features_array, action_array):
         """
-        action : numpy array of the length of num_actions with a 1 in the chosen action
+        action_array : numpy array of dimension num_episodes x num_actions 
         """
-        return self.weights.dot(action).dot(features)
+        return np.multiply(action_array.dot(weights), features_array).sum(axis=1)
 
-    def optimize(self, features, action, true_action_value):
+    def update_weights(self, features_array, action_array, true_action_values, learning_rate):
         """ This is the meat and potatoes, where you will implement the gradient descent.
         Let's go through the steps of gradient descent as covered in your opex daily
         book on page 4-16.
@@ -45,6 +44,26 @@ class linear_function_approximator(object):
           --> Sum[-2(true_action_value - estimated_action_value)(feature_n*action_1)]
         """
 
-        # Step 4) 
+        # Step 4) Set initial parameter value guesses. This is our self.weights, we can assume this is done
+        # Step 5) Get slope values for all parameters 
+        estimated_action_values = self.predict(features_array=features_array, action_array=action_array)
+        error_vector = true_action_values - estimated_action_values
+        # We should have a tensor of depth num_episodes with each matrix being [num_actions, num_features]
+        gradient = np.einsum('ij, ik-> ikj', features_array, action_array) # This is a little confusing, but basically we want to do row by row multiplication of our feature and action arrays and store the resulting matrices in a tensor
+        gradient = np.einsum('i, ikj-> ikj', error_vector, gradient) # Here we want to multiply all of our matrices a scalar, which is that episode's error value!
+        gradient = gradient*(-2) 
+        gradient = np.sum(gradient, axis=0)
+
+        # Step 6) Pick & Apply an update rule
+        """ Ok, now we have a weight shaped matrix called gradient, which tells us the dLoss/dWeight for all of our weights.
+        We will now shift our initial weight guesses by a certain amount. If our gradient is positive, that means our weight guess
+        is currently too large, and we need to lower it, and vice versa. Thus we flip around the sign of the items currently
+        in our gradient object. Also let's multiply by a learning rate to avoid large steps and reduce noise! 
+        """
+        delta_matrix = gradient*(-1)
+        delta_matrix *= learning_rate
+        self.weights += delta_matrix
+        
+
 
 
