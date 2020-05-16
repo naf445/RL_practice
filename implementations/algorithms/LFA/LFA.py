@@ -1,5 +1,8 @@
 import numpy as np
 import random
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 class linear_function_approximator(object):
     """
@@ -12,12 +15,30 @@ class linear_function_approximator(object):
         self.num_features = num_features
         self.num_actions = num_actions 
         self.weights = np.random.rand(self.num_actions, self.num_features) # Because this model will predict the action values for ALL actions every time, we will need a parameter for every feature for every possible action!
+        logging.info('created linear function approximator object')
+        logging.info('initial weights:\n{}'.format(self.weights))
     
-    def predict(self, features_array, action_array):
+    def predict(self, features_array, action_array=None):
         """
-        action_array : numpy array of dimension num_episodes x num_actions 
+        This function will run features through the current linear function.
+        If no action_array is provided, it will return an array of size num_actions,
+        with each spot being the current q_value estimate for that action.
+        If an action_array is provided, it is assumed you want an array of the q_values
+        for the specific action specified.
+
+        action_array : numpy array of dimension num_steps x num_actions 
         """
-        return np.multiply(action_array.dot(weights), features_array).sum(axis=1)
+        if action_array is not None:
+            logging.debug('action_array provided')
+            logging.debug('self.weights: {}'.format(self.weights))
+            logging.debug('features_array: {}'.format(features_array))
+            logging.debug('action_array: {}'.format(action_array))
+            return np.multiply(action_array.dot(self.weights), features_array).sum(axis=1)
+        else:
+            logging.debug('no action_array provided!!')
+            logging.debug('self.weights: {}'.format(self.weights))
+            logging.debug('features_array: {}'.format(features_array))
+            return np.dot(self.weights, features_array)
 
     def update_weights(self, features_array, action_array, true_action_values, learning_rate):
         """ This is the meat and potatoes, where you will implement the gradient descent.
@@ -46,13 +67,24 @@ class linear_function_approximator(object):
 
         # Step 4) Set initial parameter value guesses. This is our self.weights, we can assume this is done
         # Step 5) Get slope values for all parameters 
+        logging.debug('Beginning weight optimization!')
+        logging.debug('features_array: {}'.format(features_array))
+        logging.debug('action_array: {}'.format(action_array))
+        logging.debug('weights: {}'.format(self.weights))
         estimated_action_values = self.predict(features_array=features_array, action_array=action_array)
+        logging.debug('estimated_action_values: {}'.format(estimated_action_values))
+        logging.debug('true_action_values: {}'.format(true_action_values))
         error_vector = true_action_values - estimated_action_values
-        # We should have a tensor of depth num_episodes with each matrix being [num_actions, num_features]
+        logging.debug('error vector: {}'.format(error_vector))
+        # We should have a tensor of depth num_steps with each matrix being [num_actions, num_features]
         gradient = np.einsum('ij, ik-> ikj', features_array, action_array) # This is a little confusing, but basically we want to do row by row multiplication of our feature and action arrays and store the resulting matrices in a tensor
-        gradient = np.einsum('i, ikj-> ikj', error_vector, gradient) # Here we want to multiply all of our matrices a scalar, which is that episode's error value!
+        logging.debug('current gradient form: {}'.format(gradient))
+        gradient = np.einsum('i, ikj-> ikj', error_vector, gradient) # Here we want to multiply all of our matrices a scalar, which is that step's error value!
+        logging.debug('current gradient form: {}'.format(gradient))
         gradient = gradient*(-2) 
+        logging.debug('current gradient form: {}'.format(gradient))
         gradient = np.sum(gradient, axis=0)
+        logging.debug('current gradient form: {}'.format(gradient))
 
         # Step 6) Pick & Apply an update rule
         """ Ok, now we have a weight shaped matrix called gradient, which tells us the dLoss/dWeight for all of our weights.
@@ -61,9 +93,10 @@ class linear_function_approximator(object):
         in our gradient object. Also let's multiply by a learning rate to avoid large steps and reduce noise! 
         """
         delta_matrix = gradient*(-1)
+        logging.debug('current delta_matrix: {}'.format(delta_matrix))
         delta_matrix *= learning_rate
+        logging.debug('current delta_matrix: {}'.format(delta_matrix))
+        logging.debug('current weights: {}'.format(self.weights))
         self.weights += delta_matrix
+        logging.debug('weights after update: {}'.format(self.weights))
         
-
-
-
