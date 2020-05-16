@@ -4,14 +4,30 @@ import algorithms.LFA.Q_learning_LFA as Q_LFA
 import logging
 import gym
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 import numpy as np
 import pandas as pd
+import imageio
 import seaborn as sns
 from statistics import mean
 
 logging.basicConfig(level=logging.INFO)
 
-def play_game_with_LFA(env_name, LFAs, output_file_path):
+def saveanimation(frames,address="/movie.gif"):
+    """ 
+    This method ,given the frames of images make the gif and save it in the folder
+    
+    params:
+        frames:method takes in the array or np.array of images
+        address:(optional)given the address/location saves the gif on that location
+                otherwise save it to default address './movie.gif'
+    
+    return :
+        none
+    """
+    imageio.mimsave(address, frames)
+
+def play_game_with_LFA(env_name, LFAs, output_directory):
     """This function takes an environment, and a series of LFA policies
     which it wants to compare performance between on this environment."""
     iteration_num = 0
@@ -41,7 +57,23 @@ def play_game_with_LFA(env_name, LFAs, output_file_path):
     for bar in bars:
         yval = bar.get_height()
         plt.text(bar.get_x(), yval + .005, yval)
-    plt.savefig(fname=output_file_path)
+    # Save results
+    plt.savefig(fname=output_directory+'LFA.png')
+
+    # save gif of best performer
+    best_LFA = LFAs[np.argmax(policy_average_rewards)]
+    logging.info('best_LFA: {}'.format(np.argmax(policy_average_rewards)))
+    frames = []
+    for episode in range(5):
+        state = env.reset()
+        done = False
+        while not done:
+            frames.append(env.render(mode = 'rgb_array'))
+            next_action = np.argmax(LFA.predict(features_array=state))
+            state, reward, done, info = env.step(next_action) 
+    saveanimation(frames, address=output_directory+'LFA_cartpole.gif')
+
+
 
 if __name__ == '__main__':
 
@@ -71,5 +103,5 @@ if __name__ == '__main__':
     # Play game with generated policies and save results!
     play_game_with_LFA(env_name=ENV_NAME,
                             LFAs=LFA_list,
-                            output_file_path='outputs/LFA.png')
+                            output_directory='outputs/')
 
