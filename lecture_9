@@ -1,0 +1,127 @@
+Back at it again after a few years!
+This is notes on lecture 9.
+Video: https://www.youtube.com/watch?v=sGuiWX07sKw&list=PLqYmG7hTraZCRwoyGxvQkqVrZgDQi4m-5&index=34&t=1s 
+Powerpoint slides: https://www.davidsilver.uk/wp-content/uploads/2020/03/XX.pdf
+
+1-6-2023
+
+# RL Course by David Silver, Lecture 9
+## Notes by Nathan Franklin
+## January-2023
+
+## Introduction
+- Every time we have an online decision being made, we need to balance exploring or exploitation?
+- Exploration is a short term reward sacrifice for a long term gain using our new information, hopefully.
+- This tension exists precisely BECAUSE every decision we make directly impacts the data we collect and train on.
+- In normal supervised learning, we just have an old data set, and new data to predict on. In RL, we have old data maybe
+    - but we are generating new data every trajectory so we have to balance multiple objectives.
+- 3 broad approaches to exploit/explore:
+1) Random
+    * Sometimes, randomly pick  a random action
+2) Optimism facing uncertainty
+    * Look at an agent's uncertainty of actions
+    * Pick the action with higher uncertainty so you can get more info there
+    * The action with potential to still be the best!
+3) Information State Space
+    * Take in to account how valuable it is for an agent to explore given its particualr circumstances
+    * In this game, how much does more information help you get better rewards
+- Within exploration, there are really 2 main ways:
+1) Force the agent to explore different states/actions it hasn't seen
+2) Tweak directly the policy parameters from what they are
+
+## Multi Armed Bandit Problem Setup and Terminology
+- For a multi armed bandit, we have a set of actions (arms) we can choose from.
+- For every action, there is an unknown probability distribution of rewards
+- Every time we pick an action, we get an actual reward sample.
+- We want to maximize cumulative reward
+- For any given action, we can have a q(a), the expected/mean reward given this action
+- q(a*) is the optimal action for us to take, which gives us v\*, our optimal reward
+- Every action an agent picks, however much less than v* we actually get in our reward, that is our REGRET
+- The total regret (L), is summing the regret for every action over time
+- Maximizing cumulative reward is the same as minimizing total regret!!
+- For an individual action, we gall the difference between it's expected reward and the optimal reward, the "gap" (Δ) for that action
+- Regret then for an action, is the count of times we picked that action (N), times the gap for that option
+- Regret = N*Δ
+- See opex book 1-7-2023 for some of these formulas 
+
+## Algorithm Approach 1) Randomized Exploration Algorithms for the Multi Armed Bandit Problem
+- Monte-Carlo to Estimate Q(a) then Greedy
+    * Estimate the value of each action, the q(a) by taking that action and taking the mean of rewards
+    * Then always pick action with the best reward after estimation
+    * We aren't exploring so we are never going to decrease the amount of regret we have per action choice
+- Optimistic initialization of q(a) estimates then Greedy
+    * initialize all q(a)'s to maximimum reward, adjust as you get rewards.
+    * still act greedily with every action choice, picking one with current highest q(a)
+    * you also initialize your count to be high, so it takes a good amount of bad rewards from this action to really pull its q(a) down. you assign a high confidence out of the gate
+    * could still lock a good action out forever because you're taking the greedy approach
+- Each of these two Greedy ones mean you may stop exploring at some point and you may get locked in to a suboptimal, and your regret may not decrease
+- constant epsilon-greedy
+    * with probability 1-epsilon, go greedy. with probability epsilon, explore randomly! More epsilon, More exploration!
+- decaying epsilon-greedylll
+    * with probability 1-epsilon, go greedy. with probability epsilon, explore randomly! More epsilon, More exploration!
+    * decay your epsilon over time until it reaches 0
+    * it's shown that if we know the exact epsilon decay schedule we should use, we can achieve the best possible results
+- basically this whole challenge is to find the algorithm that in the long term allows us to decrease our marginal regret per action to approach 0! The regret curve is logarithmic! (Lai & Robbins theorem tell us logarithmic is the best we can do)
+- The exact shape of this regret curve will depend on a few things. The gap between the best and other arms' rewards (difference in arms' q(a)'s), and a problem's difficulty (difference in arm distributions).
+    * Both a bigger gap and a higher difficulty of problem will lead to a higher regret curve, even if we find the "best" regret curve, one which is logarithmic in regret
+    * A very difficult problem has similar distributions, while an easy problem has different distributions describing the actions so it's easier to disambiguate the best q(a).
+    * This will lead to a lower overall regret curve over time!
+
+## Algorithm Approach 2) Optimism in the Face of Uncertainty
+- see 1/9/2023 opex book
+- Must have information about the distributions of Q(a)'s not just the means for this family of algorithms to work
+- Instead of just estimating the mean for a Q(a), we are now going to estimate the mean AND a high probability UPPER CONFIDENCE BOUND for each action value! (like a confidence interval for where this mean reward. Q(A) may live)
+- We will pick the thing with the highest UPPER CONFIDENCE BOUND
+- Version 1 of Estimating the q(a) distribution using Hoeffding's Inequality (frequentist approach, no prior distribution assumptions)
+    * For any distribution of i.i.d. random variables [0,1] (in our RL case it will be the reward distribution, q(a)), if we sample it and get the mean, we won't be exactly right, there will be some error.
+    * Let's define this error as: True mean minus Sample mean
+    * We have an equation which tells us, what's the probability of this error being greater than some value U? (see opex book 1-9-23)
+    * If we have a really large U, the probability will be low, because probably our error will be smaller than this U. If we have a really small U, it's very likely that our error will be greater than U.
+    * Conversely, if we want only a 1% chance of our error being greater than U, we will know to set U more high, we can calculate U according to our acceptable level of risk of error being greater than it.
+    * OK so for RL, with this equation, we can now say, OK, we are sampling our reward distribution and have an empirical mean. The error is the True q(a) minus the empirical Q(a). What's the probability of this error being greater than some value U? And, if we have an acceptable probability of error being greater than U, how should we set our U? See 1-9-23 for some math to arrive at solving for U.
+    * We're using this equation to compute our 95% confidence interval 
+    * And over time we lower acceptable probability of error to be more and more confident we include the true value of the mean
+- ALL of this was THEORY which gets us to the UCB1 algorithm! See opex book 1-9-2023
+    * Every step, you esimate Q(a)'s and add the derived U term to get the UCB and pick the action with the highest of these Q(a)+U
+- Using Hoeffding's inequality was just one way to generate an algorithm to pick a certain action. Can use other inequalities and theorem's about acceptable risk and error to generate algorithms
+- Bayesian approach!
+    * exploit prior knowledge about rewards. a paramaterized prior distribution! With experience, we update the parameters describing this distribution!
+    * compute posterior distribution for the Q(a)'s after new data comes in, given the pulls and rewards we've seen so far
+    * Unlike the UCB1 approach, this it NOT robust to incorrect prior distribution assumptions!
+    * Use bayes law to update your distribution parameters (such as Mu and Sigma) and then use some number of standard deviations to get our UCB!
+- Another approach which explicitly needs paramaterized distribution estimates
+    *  instead of picking actions with highest UCB always, sample actions in the ratio of the probability that they are actually the best action
+    *  use Thompson sampling to do this!!
+        +  every step, if we have multiple distributions, randomly sample from each distribution. pick the one which is best from those samples as your action.
+
+## Algorithm Approch 3) Information State Space Algorithms
+- Exploration is ONLY as useful as the extra long term reward it helps us achieve!
+- So we want to explore situations where if will help us gain this long term reward
+- Let's re-formulate the bandit problem which was only A's and R's, to the full MDP, which has states, transition probabilities, actions, and rewards
+- We can work with these information states to come up with some algorithms
+- If we characterize our information by a posterior distribution, that is Bayes-Adaptive RL
+- Bernoulli bandit with bayes adaptive approach:
+    * The state information in this scenario is, alpha and beta.
+    * The reward distribution is completely described by these parameters, alpha and beta
+    * alpha: how many times we've chosen the action and had reward 0
+    * beta: hwo many times we've chosen the action and had reward 1
+    * We start off with t prior reward distribution
+    * Each time an action is selected, update this posterior distribution which is described by alpha/beta
+    * We can pre-calculate ahead of time and use gittins index to dynamically program this
+    * Also possible to use monte-carlo tree search to more tractably solve this
+
+## Summarizing So Far
+- Random exploration
+    * e-greedy
+    * softmax
+    * gaussian noise
+- Optimism in face of uncertainty (UCB/Thompson Sampling)
+
+## Contextual Bandit
+- Contextual Bandit is no longer just {A,R}, but now we have a series of {A, S, R}!
+- We know something about the state, information about the environment when we're picking our action
+- 
+
+## MDPs / Extending this to real RL agents!
+- All ideas we've seen in previous sections, extend in to this full RL/MDP case!
+- For UCB for instance, instead of Q(a) + U(a) where we have an upper confidence bound only for the action, we have Q(s,a)+U(s,a) where we have an upper confidence bound for a state/action value!
